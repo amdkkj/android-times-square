@@ -24,6 +24,7 @@ public class MonthView extends LinearLayout {
   private List<CalendarCellDecorator> decorators;
   private boolean isRtl;
   private Locale locale;
+  private boolean stopNestedSelection;
 
   public static MonthView create(ViewGroup parent, LayoutInflater inflater,
       DateFormat weekdayNameFormat, Listener listener, Calendar today, int dividerColor,
@@ -62,6 +63,7 @@ public class MonthView extends LinearLayout {
 
     view.isRtl = isRtl(locale);
     view.locale = locale;
+    view.stopNestedSelection = false;
     int firstDayOfWeek = today.getFirstDayOfWeek();
     final CalendarRowView headerRow = (CalendarRowView) view.grid.getChildAt(0);
 
@@ -186,6 +188,16 @@ public class MonthView extends LinearLayout {
 
   public void setHeaderTextColor(int color) {
     grid.setHeaderTextColor(color);
+  }
+
+  public void stopNestedSelection() {
+    this.stopNestedSelection = true;
+  }
+
+  @Override
+  public void dispatchSetSelected(boolean selected) {
+    if (stopNestedSelection) return;
+    super.dispatchSetSelected(selected);
   }
 
   public interface Listener {

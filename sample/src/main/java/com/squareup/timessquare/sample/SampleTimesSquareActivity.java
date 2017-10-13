@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -64,8 +65,9 @@ public class SampleTimesSquareActivity extends Activity {
     final Button hebrew = (Button) findViewById(R.id.button_hebrew);
     final Button arabic = (Button) findViewById(R.id.button_arabic);
     final Button customView = (Button) findViewById(R.id.button_custom_view);
+    final Button withDpad = (Button) findViewById(R.id.button_with_dpad);
 
-    modeButtons.addAll(Arrays.asList(single, multi, range, displayOnly, decorator, customView));
+    modeButtons.addAll(Arrays.asList(single, multi, range, displayOnly, decorator, customView, withDpad));
 
     single.setOnClickListener(new OnClickListener() {
       @Override public void onClick(View v) {
@@ -205,6 +207,24 @@ public class SampleTimesSquareActivity extends Activity {
       }
     });
 
+    withDpad.setOnClickListener(new OnClickListener() {
+      @Override public void onClick(View view) {
+        String title = "You can use a D-pad!";
+        showCalendarInDialog(title, R.layout.dialog);
+        dialogView.init(lastYear.getTime(), nextYear.getTime()) //
+                .withSelectedDate(new Date())
+                .stopNestedSelection();
+        DpadHandler.init(dialogView, new CalendarPickerView.OnDateSelectedListener() {
+          @Override
+          public void onDateSelected(Date date) {
+            Toast.makeText(SampleTimesSquareActivity.this, "" + date, Toast.LENGTH_SHORT).show();
+          }
+          @Override
+          public void onDateUnselected(Date date) {}
+        });
+      }
+    });
+
     findViewById(R.id.done_button).setOnClickListener(new OnClickListener() {
       @Override public void onClick(View view) {
         Log.d(TAG, "Selected time in millis: " + calendar.getSelectedDate().getTime());
@@ -296,5 +316,73 @@ public class SampleTimesSquareActivity extends Activity {
         }
       });
     }
+  }
+
+  private static final class DpadHandler implements View.OnKeyListener {
+    private final CalendarPickerView.OnDateSelectedListener dateListener;
+
+    static void init(CalendarPickerView calendar, CalendarPickerView.OnDateSelectedListener dateListener) {
+      calendar.setOnDateSelectedListener(dateListener);
+      calendar.setOnKeyListener(new DpadHandler(dateListener));
+    }
+
+    private DpadHandler(CalendarPickerView.OnDateSelectedListener dateListener) {
+      this.dateListener = dateListener;
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+      return handleDpad((CalendarPickerView) v, keyCode, event);
+    }
+
+    private boolean handleDpad(CalendarPickerView calendar, int keyCode, KeyEvent event) {
+      if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+
+      final Date selectedDate = calendar.getSelectedDate();
+
+      final int dateOffset;
+      switch (keyCode) {
+        case KeyEvent.KEYCODE_DPAD_LEFT:
+          dateOffset = -1;
+          break;
+        case KeyEvent.KEYCODE_DPAD_RIGHT:
+          dateOffset = +1;
+          break;
+        case KeyEvent.KEYCODE_DPAD_UP:
+          dateOffset = -7;
+          break;
+        case KeyEvent.KEYCODE_DPAD_DOWN:
+          dateOffset = +7;
+          break;
+        case KeyEvent.KEYCODE_DPAD_CENTER:
+        case KeyEvent.KEYCODE_ENTER:
+          return fireDateSelected(selectedDate);
+        default:
+          return false;
+      }
+
+      final Date newlySelectedDate = addDays(selectedDate, dateOffset);
+      if (calendar.canSelect(newlySelectedDate)) {
+        calendar.selectDate(newlySelectedDate);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    private boolean fireDateSelected(Date selectedDate) {
+      if (dateListener == null) return false;
+
+      dateListener.onDateSelected(selectedDate);
+      return true;
+    }
+  }
+
+  private static Date addDays(Date date, int amount) {
+    if (date == null) return null;
+    final Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    cal.add(Calendar.DAY_OF_MONTH, amount);
+    return cal.getTime();
   }
 }

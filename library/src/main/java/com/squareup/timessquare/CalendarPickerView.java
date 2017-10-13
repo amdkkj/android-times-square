@@ -99,6 +99,7 @@ public class CalendarPickerView extends ListView {
   private DayViewAdapter dayViewAdapter = new DefaultDayViewAdapter();
 
   private boolean monthsReverseOrder;
+  private boolean stopNestedSelection;
 
   public void setDecorators(List<CalendarCellDecorator> decorators) {
     this.decorators = decorators;
@@ -227,6 +228,7 @@ public class CalendarPickerView extends ListView {
     setMidnight(minCal);
     setMidnight(maxCal);
     displayOnly = false;
+    stopNestedSelection = false;
 
     // maxDate is exclusive: bump back to the previous day so if maxDate is the first of a month,
     // we don't accidentally include that month in the view.
@@ -393,6 +395,11 @@ public class CalendarPickerView extends ListView {
 
     public FluentInitializer withMonthsReverseOrder(boolean monthsRevOrder) {
       monthsReverseOrder = monthsRevOrder;
+      return this;
+    }
+
+    public FluentInitializer stopNestedSelection() {
+      stopNestedSelection = true;
       return this;
     }
   }
@@ -633,6 +640,16 @@ public class CalendarPickerView extends ListView {
     }
   }
 
+  public boolean canSelect(Date date) {
+    if (date == null) {
+      return false;
+    }
+    if (date.before(minCal.getTime()) || date.after(maxCal.getTime())) {
+      return false;
+    }
+    return isDateSelectable(date);
+  }
+
   private boolean doSelectDate(Date date, MonthCellDescriptor cell) {
     Calendar newlySelectedCal = Calendar.getInstance(timeZone, locale);
     newlySelectedCal.setTime(date);
@@ -864,6 +881,10 @@ public class CalendarPickerView extends ListView {
       }
       monthView.init(months.get(position), cells.getValueAtIndex(position), displayOnly,
           titleTypeface, dateTypeface);
+
+      if (stopNestedSelection) {
+        monthView.stopNestedSelection();
+      }
       return monthView;
     }
   }
