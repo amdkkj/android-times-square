@@ -633,6 +633,16 @@ public class CalendarPickerView extends ListView {
     }
   }
 
+  public boolean canSelect(Date date) {
+    if (date == null) {
+      return false;
+    }
+    if (date.before(minCal.getTime()) || date.after(maxCal.getTime())) {
+      return false;
+    }
+    return isDateSelectable(date);
+  }
+
   private boolean doSelectDate(Date date, MonthCellDescriptor cell) {
     Calendar newlySelectedCal = Calendar.getInstance(timeZone, locale);
     newlySelectedCal.setTime(date);

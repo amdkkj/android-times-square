@@ -7,6 +7,7 @@
     <string name="Hebrew">Hebrew</string>
     <string name="Arabic">Arabic</string>
     <string name="CustomView">Custom View</string>
+    <string name="WithDpad">With D-pad</string>
     <string name="Dialog">Dialog</string>
     <string name="DisplayOnly">DisplayOnly</string>
     <string name="Range">Range</string>

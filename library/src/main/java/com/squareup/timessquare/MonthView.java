@@ -188,6 +188,12 @@ public class MonthView extends LinearLayout {
     grid.setHeaderTextColor(color);
   }
 
+  @Override
+  public void dispatchSetSelected(boolean selected) {
+    // Do not call super.dispatchSetSelected(selected).
+    // Otherwise, all children of MonthView will be selected.
+  }
+
   public interface Listener {
     void handleClick(MonthCellDescriptor cell);
   }
